@@ -1,0 +1,48 @@
+---
+title: "WTPCalculations"
+author: "Rachel Wiser"
+output: html_document
+---
+
+```{r eval=FALSE}
+#Change data_date = to the date of data. This is the only place you need to change the code before running. 
+data_date <- "April28"
+
+#Reads in previously analyzed data.
+AnalysisData <- read.csv(paste("../Data/ReadyForAnalysis/AD", data_date, ".csv", sep=''))
+
+# Runs a conditional logit on the data using just the attributes:
+library(survival)
+clogout1 <- clogit(RES ~ ASC + Fairtrade + FreshFair + Local + Organic + Carbon + Grower + PricePercent + strata(STR), data = AnalysisData)
+
+MWTP <- mwtp(output = clogout1, monetary.variables = c("PricePercent"), nonmonetary.variables = c("Fairtrade", "FreshFair", "Local", "Organic", "Carbon", "Grower"), seed = 987)
+
+# Saves this MWTP as a CSV
+write.csv(MWTP$mwtp.table, paste("../Outputs/Outputs", data_date,"/MWTP", data_date, ".csv", sep=''), row.names=FALSE)
+
+# Make a Barplot of this data and save into output folder under a subfolder of the date:
+AttributeLabels <- c("Fairtrade", "Freshness Guaranteed Fairtrade", "Local", "Organic", "Carbon", "Knowing the Grower")
+
+MWTPTable <- data.frame(MWTP$mwtp.table)$MWTP
+MWTPBarplot <- barplot(MWTPTable, 
+                col = "darkorange", 
+                names.arg = AttributeLabels, 
+                ylab = "Percent Premium", 
+                xlab = "Flower Attribute", 
+                main = "MWTP for Flower Attributes", 
+                sub = paste("results as of ", data_date, sep=''))
+
+
+pdf(file = paste("../Outputs/Outputs", data_date, "/WTPBarplot", data_date, ".pdf" , sep=''))
+barplot(MWTPTable, 
+                col = "Indian Red 3", 
+                names.arg = AttributeLabels, 
+                ylab = "Percent Premium", 
+                xlab = "Flower Attribute", 
+                main = "MWTP for Flower Attributes", 
+                sub = paste("results as of ", data_date, sep=''))
+
+dev.off()
+
+```
+

@@ -1,0 +1,402 @@
+---
+title: "Data Processing"
+author: "Rachel Wiser"
+output:
+  html_document: default
+  pdf_document: default
+  word_document: default
+---
+### To start change data_date to the date of the data!
+
+``` {r eval=FALSE}
+# Change data_date = to the date of data. This is the only place you need to change the code before running. 
+data_date = "April14"
+
+# Creating a folder within the Output folder for this analysis results:
+dir.create(paste("./Outputs/Outputs", data_date, sep=''))
+```
+
+````{r}
+# Qualtrics data should already be saved in the QualtricsDownloads file with the filename DataMonthDay.xls. Data from Qualtrics is now becoming "Data", skp = 2 is telling it to skip the 2nd and 3rd row.
+
+library(readxl)
+Data <- read_excel(paste("./Data/QualtricsDownloads/Data", data_date, ".xls", sep=''), skip = 2)
+
+# Next it renames the columns
+
+names(Data) <- c("StartTime", "EndTime", "IPStatus", "IPAddress", "Progress", "Duration", "Finished", "Date", "RecordID", "LastName", "FirstName", "Email", "DataReference", "Latitude", "Longitude", "Anonymous", "Language", "Consent", "Q101", "Q102", "Q103", "Q104", "Q105", "Q106", "Q107", "Q108", "Q109", "Q110", "Q111", "Q112", "Q201", "Q202", "Q203", "Q204", "Q205", "Q206", "Q207", "Q208", "Q209", "Q210", "Q211", "Q212", "Q301", "Q302", "Q303", "Q304", "Q305", "Q306", "Q307", "Q308", "Q309", "Q310", "Q311", "Q312", "Q401", "Q402", "Q403", "Q404", "Q405", "Q406", "Q407", "Q408", "Q409", "Q410", "Q411", "Q412", "ES1", "ES2", "ES3", "ES4", "ES5", "ES6", "ES7", "ES8", "ES9", "ES10", "ES11", "ES12", "ES13", "ES14", "ES15", "ES16", "ES17", "ES18", "ES19", "ES20", "ES21", "Gender", "Age", "Zipcode", "Income", "Race", "RaceSubset", "Education", "Budget", "FlowerPercent", "Years", "Season", "FlowerFactors", "EnticeFlowerPurchase", "Concerns", "Thoughts", "NoIdea")
+
+# Delete all responses where Progress>97. The last 2 percent are the optional open-ended questions:
+Data<-Data[(Data$Progress>97) & (Data$Consent=="Next"),]
+
+# Delete useless columns
+
+UselessColumns <- c("StartTime", "EndTime", "IPStatus", "IPAddress", "Progress", "Duration", "Finished", "Date", "RecordID", "LastName", "FirstName", "Email", "DataReference", "Latitude", "Longitude", "Anonymous", "Language", "Consent","RaceSubset", "FlowerFactors", "EnticeFlowerPurchase", "Concerns", "Thoughts", "NoIdea")
+
+Data <- Data[,!(names(Data)%in%UselessColumns)]
+
+# Creates a blank columns for Block, Q1-Q12, etc and an ID label
+
+Data = cbind("ID"=1:nrow(Data), "BLOCK"="NULL", "Q1"="NULL", "Q2" = "NULL", "Q3" = "NULL", "Q4" = "NULL", "Q5" = "NULL", "Q6" = "NULL", "Q7" = "NULL", "Q8" = "NULL", "Q9" = "NULL", "Q10" = "NULL", "Q11" = "NULL", "Q12" = "NULL", Data)
+
+# Fill blanks with "Useless". (No specific reason for Useless, I could have used any word but useless seemed appropriate because they are.. useless.)
+Data[is.na(Data)] <- c('Useless') 
+
+# There were four possible set of decisions (with 12 decisions in them) Qualtrics could have shown a respondent. Here the code fills the BLOCK column with the number of the block each respondent was shown:
+Data$BLOCK <- ifelse(Data$Q101 == 'Useless' & Data$Q201 == 'Useless' & Data$Q301 == 'Useless', 4, ifelse(Data$Q101 == 'Useless' & Data$Q201 == 'Useless' & Data$Q401 == 'Useless', 3, ifelse(Data$Q101 == 'Useless' & Data$Q401 == 'Useless' & Data$Q301 == 'Useless', 2, ifelse(Data$Q401 == 'Useless' & Data$Q301 == 'Useless' & Data$Q201 == 'Useless', 1, 'FAIL'))))
+
+# Now create new columns labeled "Q1", "Q2", etc based on responses. Data$Q1, for example fills the Q1 column with the response the respondent gave to decision 1. If they chose bouquet A it is now a 1, bouquet B is 2, or neither it is 3. This is repeated for all 12 decisions they were shown.
+
+Data$Q1 <- ifelse( Data$BLOCK == 1 & Data$Q101 == 'Bouquet A', 1, 
+  ifelse( Data$BLOCK == 1 & Data$Q101 == 'Bouquet B', 2, 
+  ifelse( Data$BLOCK == 1 & Data$Q101 == 'Neither Bouquet', 3, 
+  ifelse( Data$BLOCK == 2 & Data$Q201 == 'Bouquet A', 1, 
+  ifelse( Data$BLOCK == 2 & Data$Q201 == 'Bouquet B', 2, 
+  ifelse( Data$BLOCK == 2 & Data$Q201 == 'Neither Bouquet', 3, 
+  ifelse( Data$BLOCK == 3 & Data$Q301 == 'Bouquet A', 1, 
+  ifelse( Data$BLOCK == 3 & Data$Q301 == 'Bouquet B', 2, 
+  ifelse( Data$BLOCK == 3 & Data$Q301 == 'Neither Bouquet', 3,
+  ifelse( Data$BLOCK == 4 & Data$Q401 == 'Bouquet A', 1, 
+  ifelse( Data$BLOCK == 4 & Data$Q401 == 'Bouquet B', 2, 
+  ifelse( Data$BLOCK == 4 & Data$Q401 == 'Neither Bouquet', 3,
+          'FAIL'))))))))))))
+                  
+Data$Q2 <- ifelse( Data$BLOCK == 1 & Data$Q102 == 'Bouquet A', 1, 
+  ifelse( Data$BLOCK == 1 & Data$Q102 == 'Bouquet B', 2, 
+  ifelse( Data$BLOCK == 1 & Data$Q102 == 'Neither Bouquet', 3, 
+  ifelse( Data$BLOCK == 2 & Data$Q202 == 'Bouquet A', 1, 
+  ifelse( Data$BLOCK == 2 & Data$Q202 == 'Bouquet B', 2, 
+  ifelse( Data$BLOCK == 2 & Data$Q202 == 'Neither Bouquet', 3, 
+  ifelse( Data$BLOCK == 3 & Data$Q302 == 'Bouquet A', 1, 
+  ifelse( Data$BLOCK == 3 & Data$Q302 == 'Bouquet B', 2, 
+  ifelse( Data$BLOCK == 3 & Data$Q302 == 'Neither Bouquet', 3,
+  ifelse( Data$BLOCK == 4 & Data$Q402 == 'Bouquet A', 1, 
+  ifelse( Data$BLOCK == 4 & Data$Q402 == 'Bouquet B', 2, 
+  ifelse( Data$BLOCK == 4 & Data$Q402 == 'Neither Bouquet', 3,
+          'FAIL'))))))))))))              
+
+Data$Q3 <- ifelse( Data$BLOCK == 1 & Data$Q103 == 'Bouquet A', 1, 
+  ifelse( Data$BLOCK == 1 & Data$Q103 == 'Bouquet B', 2, 
+  ifelse( Data$BLOCK == 1 & Data$Q103 == 'Neither Bouquet', 3, 
+  ifelse( Data$BLOCK == 2 & Data$Q203 == 'Bouquet A', 1, 
+  ifelse( Data$BLOCK == 2 & Data$Q203 == 'Bouquet B', 2, 
+  ifelse( Data$BLOCK == 2 & Data$Q203 == 'Neither Bouquet', 3, 
+  ifelse( Data$BLOCK == 3 & Data$Q303 == 'Bouquet A', 1, 
+  ifelse( Data$BLOCK == 3 & Data$Q303 == 'Bouquet B', 2, 
+  ifelse( Data$BLOCK == 3 & Data$Q303 == 'Neither Bouquet', 3,
+  ifelse( Data$BLOCK == 4 & Data$Q403 == 'Bouquet A', 1, 
+  ifelse( Data$BLOCK == 4 & Data$Q403 == 'Bouquet B', 2, 
+  ifelse( Data$BLOCK == 4 & Data$Q403 == 'Neither Bouquet', 3,
+          'FAIL'))))))))))))
+
+Data$Q4 <- ifelse( Data$BLOCK == 1 & Data$Q104 == 'Bouquet A', 1, 
+  ifelse( Data$BLOCK == 1 & Data$Q104 == 'Bouquet B', 2, 
+  ifelse( Data$BLOCK == 1 & Data$Q104 == 'Neither Bouquet', 3, 
+  ifelse( Data$BLOCK == 2 & Data$Q204 == 'Bouquet A', 1, 
+  ifelse( Data$BLOCK == 2 & Data$Q204 == 'Bouquet B', 2, 
+  ifelse( Data$BLOCK == 2 & Data$Q204 == 'Neither Bouquet', 3, 
+  ifelse( Data$BLOCK == 3 & Data$Q304 == 'Bouquet A', 1, 
+  ifelse( Data$BLOCK == 3 & Data$Q304 == 'Bouquet B', 2, 
+  ifelse( Data$BLOCK == 3 & Data$Q304 == 'Neither Bouquet', 3,
+  ifelse( Data$BLOCK == 4 & Data$Q404 == 'Bouquet A', 1, 
+  ifelse( Data$BLOCK == 4 & Data$Q404 == 'Bouquet B', 2, 
+  ifelse( Data$BLOCK == 4 & Data$Q404 == 'Neither Bouquet', 3,
+          'FAIL'))))))))))))
+
+Data$Q5 <- ifelse( Data$BLOCK == 1 & Data$Q105 == 'Bouquet A', 1, 
+  ifelse( Data$BLOCK == 1 & Data$Q105 == 'Bouquet B', 2, 
+  ifelse( Data$BLOCK == 1 & Data$Q105 == 'Neither Bouquet', 3, 
+  ifelse( Data$BLOCK == 2 & Data$Q205 == 'Bouquet A', 1, 
+  ifelse( Data$BLOCK == 2 & Data$Q205 == 'Bouquet B', 2, 
+  ifelse( Data$BLOCK == 2 & Data$Q205 == 'Neither Bouquet', 3, 
+  ifelse( Data$BLOCK == 3 & Data$Q305 == 'Bouquet A', 1, 
+  ifelse( Data$BLOCK == 3 & Data$Q305 == 'Bouquet B', 2, 
+  ifelse( Data$BLOCK == 3 & Data$Q305 == 'Neither Bouquet', 3,
+  ifelse( Data$BLOCK == 4 & Data$Q405 == 'Bouquet A', 1, 
+  ifelse( Data$BLOCK == 4 & Data$Q405 == 'Bouquet B', 2, 
+  ifelse( Data$BLOCK == 4 & Data$Q405 == 'Neither Bouquet', 3,
+          'FAIL'))))))))))))
+
+Data$Q6 <- ifelse( Data$BLOCK == 1 & Data$Q106 == 'Bouquet A', 1, 
+  ifelse( Data$BLOCK == 1 & Data$Q106 == 'Bouquet B', 2, 
+  ifelse( Data$BLOCK == 1 & Data$Q106 == 'Neither Bouquet', 3, 
+  ifelse( Data$BLOCK == 2 & Data$Q206 == 'Bouquet A', 1, 
+  ifelse( Data$BLOCK == 2 & Data$Q206 == 'Bouquet B', 2, 
+  ifelse( Data$BLOCK == 2 & Data$Q206 == 'Neither Bouquet', 3, 
+  ifelse( Data$BLOCK == 3 & Data$Q306 == 'Bouquet A', 1, 
+  ifelse( Data$BLOCK == 3 & Data$Q306 == 'Bouquet B', 2, 
+  ifelse( Data$BLOCK == 3 & Data$Q306 == 'Neither Bouquet', 3,
+  ifelse( Data$BLOCK == 4 & Data$Q406 == 'Bouquet A', 1, 
+  ifelse( Data$BLOCK == 4 & Data$Q406 == 'Bouquet B', 2, 
+  ifelse( Data$BLOCK == 4 & Data$Q406 == 'Neither Bouquet', 3,
+          'FAIL'))))))))))))
+ 
+Data$Q7 <- ifelse( Data$BLOCK == 1 & Data$Q107 == 'Bouquet A', 1, 
+  ifelse( Data$BLOCK == 1 & Data$Q107 == 'Bouquet B', 2, 
+  ifelse( Data$BLOCK == 1 & Data$Q107 == 'Neither Bouquet', 3, 
+  ifelse( Data$BLOCK == 2 & Data$Q207 == 'Bouquet A', 1, 
+  ifelse( Data$BLOCK == 2 & Data$Q207 == 'Bouquet B', 2, 
+  ifelse( Data$BLOCK == 2 & Data$Q207 == 'Neither Bouquet', 3, 
+  ifelse( Data$BLOCK == 3 & Data$Q307 == 'Bouquet A', 1, 
+  ifelse( Data$BLOCK == 3 & Data$Q307 == 'Bouquet B', 2, 
+  ifelse( Data$BLOCK == 3 & Data$Q307 == 'Neither Bouquet', 3,
+  ifelse( Data$BLOCK == 4 & Data$Q407 == 'Bouquet A', 1, 
+  ifelse( Data$BLOCK == 4 & Data$Q407 == 'Bouquet B', 2, 
+  ifelse( Data$BLOCK == 4 & Data$Q407 == 'Neither Bouquet', 3,
+          'FAIL'))))))))))))
+
+Data$Q8 <- ifelse( Data$BLOCK == 1 & Data$Q108 == 'Bouquet A', 1, 
+  ifelse( Data$BLOCK == 1 & Data$Q108 == 'Bouquet B', 2, 
+  ifelse( Data$BLOCK == 1 & Data$Q108 == 'Neither Bouquet', 3, 
+  ifelse( Data$BLOCK == 2 & Data$Q208 == 'Bouquet A', 1, 
+  ifelse( Data$BLOCK == 2 & Data$Q208 == 'Bouquet B', 2, 
+  ifelse( Data$BLOCK == 2 & Data$Q208 == 'Neither Bouquet', 3, 
+  ifelse( Data$BLOCK == 3 & Data$Q308 == 'Bouquet A', 1, 
+  ifelse( Data$BLOCK == 3 & Data$Q308 == 'Bouquet B', 2, 
+  ifelse( Data$BLOCK == 3 & Data$Q308 == 'Neither Bouquet', 3,
+  ifelse( Data$BLOCK == 4 & Data$Q408 == 'Bouquet A', 1, 
+  ifelse( Data$BLOCK == 4 & Data$Q408 == 'Bouquet B', 2, 
+  ifelse( Data$BLOCK == 4 & Data$Q408 == 'Neither Bouquet', 3,
+          'FAIL'))))))))))))
+
+Data$Q9 <- ifelse( Data$BLOCK == 1 & Data$Q109 == 'Bouquet A', 1, 
+  ifelse( Data$BLOCK == 1 & Data$Q109 == 'Bouquet B', 2, 
+  ifelse( Data$BLOCK == 1 & Data$Q109 == 'Neither Bouquet', 3, 
+  ifelse( Data$BLOCK == 2 & Data$Q209 == 'Bouquet A', 1, 
+  ifelse( Data$BLOCK == 2 & Data$Q209 == 'Bouquet B', 2, 
+  ifelse( Data$BLOCK == 2 & Data$Q209 == 'Neither Bouquet', 3, 
+  ifelse( Data$BLOCK == 3 & Data$Q309 == 'Bouquet A', 1, 
+  ifelse( Data$BLOCK == 3 & Data$Q309 == 'Bouquet B', 2, 
+  ifelse( Data$BLOCK == 3 & Data$Q309 == 'Neither Bouquet', 3,
+  ifelse( Data$BLOCK == 4 & Data$Q409 == 'Bouquet A', 1, 
+  ifelse( Data$BLOCK == 4 & Data$Q409 == 'Bouquet B', 2, 
+  ifelse( Data$BLOCK == 4 & Data$Q409 == 'Neither Bouquet', 3,
+          'FAIL'))))))))))))
+
+Data$Q10 <- ifelse( Data$BLOCK == 1 & Data$Q110 == 'Bouquet A', 1, 
+  ifelse( Data$BLOCK == 1 & Data$Q110 == 'Bouquet B', 2, 
+  ifelse( Data$BLOCK == 1 & Data$Q110 == 'Neither Bouquet', 3, 
+  ifelse( Data$BLOCK == 2 & Data$Q210 == 'Bouquet A', 1, 
+  ifelse( Data$BLOCK == 2 & Data$Q210 == 'Bouquet B', 2, 
+  ifelse( Data$BLOCK == 2 & Data$Q210 == 'Neither Bouquet', 3, 
+  ifelse( Data$BLOCK == 3 & Data$Q310 == 'Bouquet A', 1, 
+  ifelse( Data$BLOCK == 3 & Data$Q310 == 'Bouquet B', 2, 
+  ifelse( Data$BLOCK == 3 & Data$Q310 == 'Neither Bouquet', 3,
+  ifelse( Data$BLOCK == 4 & Data$Q410 == 'Bouquet A', 1, 
+  ifelse( Data$BLOCK == 4 & Data$Q410 == 'Bouquet B', 2, 
+  ifelse( Data$BLOCK == 4 & Data$Q410 == 'Neither Bouquet', 3,
+          'FAIL'))))))))))))
+
+Data$Q11 <- ifelse( Data$BLOCK == 1 & Data$Q111 == 'Bouquet A', 1, 
+  ifelse( Data$BLOCK == 1 & Data$Q111 == 'Bouquet B', 2, 
+  ifelse( Data$BLOCK == 1 & Data$Q111 == 'Neither Bouquet', 3, 
+  ifelse( Data$BLOCK == 2 & Data$Q211 == 'Bouquet A', 1, 
+  ifelse( Data$BLOCK == 2 & Data$Q211 == 'Bouquet B', 2, 
+  ifelse( Data$BLOCK == 2 & Data$Q211 == 'Neither Bouquet', 3, 
+  ifelse( Data$BLOCK == 3 & Data$Q311 == 'Bouquet A', 1, 
+  ifelse( Data$BLOCK == 3 & Data$Q311 == 'Bouquet B', 2, 
+  ifelse( Data$BLOCK == 3 & Data$Q311 == 'Neither Bouquet', 3,
+  ifelse( Data$BLOCK == 4 & Data$Q411 == 'Bouquet A', 1, 
+  ifelse( Data$BLOCK == 4 & Data$Q411 == 'Bouquet B', 2, 
+  ifelse( Data$BLOCK == 4 & Data$Q411 == 'Neither Bouquet', 3,
+          'FAIL'))))))))))))
+
+Data$Q12 <- ifelse( Data$BLOCK == 1 & Data$Q112 == 'Bouquet A', 1, 
+  ifelse( Data$BLOCK == 1 & Data$Q112 == 'Bouquet B', 2, 
+  ifelse( Data$BLOCK == 1 & Data$Q112 == 'Neither Bouquet', 3, 
+  ifelse( Data$BLOCK == 2 & Data$Q212 == 'Bouquet A', 1, 
+  ifelse( Data$BLOCK == 2 & Data$Q212 == 'Bouquet B', 2, 
+  ifelse( Data$BLOCK == 2 & Data$Q212 == 'Neither Bouquet', 3, 
+  ifelse( Data$BLOCK == 3 & Data$Q312 == 'Bouquet A', 1, 
+  ifelse( Data$BLOCK == 3 & Data$Q312 == 'Bouquet B', 2, 
+  ifelse( Data$BLOCK == 3 & Data$Q312 == 'Neither Bouquet', 3,
+  ifelse( Data$BLOCK == 4 & Data$Q412 == 'Bouquet A', 1, 
+  ifelse( Data$BLOCK == 4 & Data$Q412 == 'Bouquet B', 2, 
+  ifelse( Data$BLOCK == 4 & Data$Q412 == 'Neither Bouquet', 3,
+          'FAIL'))))))))))))
+
+Data$BLOCK<-as.numeric(Data$BLOCK)
+
+# Now creating a dummy variable of 1 for female and 0 for anything else:
+Data$Female <- ifelse(Data$Gender == 'Female', 1, 0)
+
+# Now creating a dummy variable of 1 for white and 0 for anything else (including mix-race including white):
+Data$White <- ifelse(Data$Race == 'White', 1, 0)
+
+# The flower percentage the respondents could choose included one titled "Over 10%", I set this at a value of 10% (.1):
+Data$FlowerPercent <- ifelse(Data$FlowerPercent =="Over 10%", .1, Data$FlowerPercent)
+
+# Ages, Education, and Income were given as ranges. Therefore these are converted to ranks as the specific number within the range is unknown for each respondent:
+Data$EducationRank <- ifelse(Data$Education =="Less than high school degree", 1,
+  ifelse(Data$Education =="Some college but no degree", 2,
+  ifelse(Data$Education =="Associate degree in college (2-year)", 3,
+  ifelse(Data$Education =="Bachelor's degree in college (4-year)", 4,
+  ifelse(Data$Education =="Professional degree (JD, MD)", 5,
+  ifelse(Data$Education =="Master's degree", 6,
+  ifelse(Data$Education =="Doctoral degree", 1, 'FAIL'
+)))))))
+
+Data$AgeRank <- ifelse(Data$Age =="18 - 22", 1, 
+  ifelse(Data$Age =="23 - 26", 2, 
+  ifelse(Data$Age =="27 - 30", 3,
+  ifelse(Data$Age =="31 - 35", 4,
+  ifelse(Data$Age =="36 - 40", 5,
+  ifelse(Data$Age =="41 - 50", 6,
+  ifelse(Data$Age =="51 or older", 7, 'FAIL'
+  )))))))
+  
+  
+Data$IncomeRank <- ifelse(Data$Income =="Under $25,000", 1,
+  ifelse(Data$Income =="$25,000 - $49,999", 2, 
+  ifelse(Data$Income =="$50,000 - $74,999", 3, 
+  ifelse(Data$Income =="$75,000 - $99,999", 4,
+  ifelse(Data$Income =="$100,000 - $149,000", 5,
+  ifelse(Data$Income =="$150,000 - $199,999", 6,
+  ifelse(Data$Income =="$200,000 or more", 7, 'FAIL'
+  )))))))
+
+Data$BudgetRank <- ifelse(Data$Budget =="Under $1,000", 1,
+  ifelse(Data$Budget =="$1,000 - $4,999", 2, 
+  ifelse(Data$Budget =="$5,000 - $9,999", 3, 
+  ifelse(Data$Budget =="$10,000 - $14,999", 4,
+  ifelse(Data$Budget =="$15,000 - $19,999", 5,
+  ifelse(Data$Budget =="$20,000 - $24,999", 6,
+  ifelse(Data$Budget =="$25,000 - $29,999", 7, 
+  ifelse(Data$Budget =="$30,000 - $34,999", 8,       
+  ifelse(Data$Budget =="$35,000 - $39,999", 9, 
+  ifelse(Data$Budget =="$40,000 - $49,999", 10,
+  ifelse(Data$Budget =="$50,000 - $74,999", 11,
+  ifelse(Data$Budget =="$75,000 - $99,999", 12,
+  ifelse(Data$Budget =="$100,000 or more", 13,
+         'FAIL')))))))))))))
+
+Data$YearsRank <- ifelse(Data$Years =="this year", 1,
+  ifelse(Data$Years =="next year", 2, 
+  ifelse(Data$Years =="in two years", 3, 
+  ifelse(Data$Years =="in three to four years", 4,
+  ifelse(Data$Years =="in five years or more", 5,
+         'FAIL')))))
+
+
+# Delete the now useless Q101 - Q412, Gender, etc columns:
+UselessQ101toQ412Gender <- c("Q101", "Q102", "Q103", "Q104", "Q105", "Q106", "Q107", "Q108", "Q109", "Q110", "Q111", "Q112", "Q201", "Q202", "Q203", "Q204", "Q205", "Q206", "Q207", "Q208", "Q209", "Q210", "Q211", "Q212", "Q301", "Q302", "Q303", "Q304", "Q305", "Q306", "Q307", "Q308", "Q309", "Q310", "Q311", "Q312", "Q401", "Q402", "Q403", "Q404", "Q405", "Q406", "Q407", "Q408", "Q409", "Q410", "Q411", "Q412", "Gender")
+
+Data <- Data[,!(names(Data)%in%UselessQ101toQ412Gender)]
+
+```
+
+#### The next section has to do with the environmental and social views. For your awareness, the statements presented to the respondents are below. They ranked them from Strongly Disagree to Strongly Agree. If the code below reverses the number (because the response for that one statement would have a 1 as pro-environment or society) that is noted. The twenty-one statements are also divided into four categories which are also below:
+
+##### Environmental and Social Views Categories: HI (Human Interference), ED (Equity and Development), HON (Human Over Nature), NON (Duties to Nonhumans)
+
+##### The statements shown:
+###### ES1: HI: Present levels of industrial activity are severely upsetting the natural environment.
+###### ES2: HI: Present levels of industrial activity are excessive and need to be reduced.
+###### ES3: HI: Humans should adapt to nature rather than modify it to suit us.
+###### ES4: HI: A change in basic attitudes is necessary in order to solve environmental problems.
+###### ES5: HI: Humans should live in harmony with the rest of nature.
+###### ES6: HI: Human interference with nature often results in disastrous consequences.
+###### ES7: HI: Humans are presently interfering too much with the natural environment.
+###### ES8: HI: People should have compassion and respect for the rest of nature.
+###### ES9: ED: There are limits to industrial growth.
+###### ES10: ED: Natural resources should be used primarily to provide for basic needs rather than material wealth.
+###### ES11: ED: Humans have moral duties and obligations to other humans.
+###### ES12: ED: Present generations of humans have moral duties and obligations to future human generations.
+###### ES13: ED: Satisfaction and a high quality of life are more important than money or material wealth.
+###### ES14: HON: Reversed: Humans have the right to alter nature to satisfy wants and desire.
+###### ES15: HON: Reversed: Maintaining economic growth is more important than protecting the natural environment.
+###### ES16: HON: Reversed: Humans have the right to reduce the number of species on Earth in order to promote economic development.
+###### ES17: HON: Reversed: Humans have the right to subdue and control the rest of nature.
+###### ES18: NON: The natural environment has value within itself regardles of any value that humans may place on it.
+###### ES19: NON: Humans have moral duties and obligations to other animal species.
+###### ES20: NON: Humans have moral duties and obligations to plants and trees.
+###### ES21: NON: Humans have moral duties and obligations to the non-living components of nature (e.g., rocks).
+
+
+##### Some social views need to be reversed because strongly disagree for those are pro-environment: 
+
+``` {r eval=FALSE}
+Data$ES14 <- ifelse(Data$ES14=="1", 7,
+  ifelse(Data$ES14 =="2", 6,
+  ifelse(Data$ES14 =="3", 5,
+  ifelse(Data$ES14 =="4", 4,
+  ifelse(Data$ES14 =="5", 3,
+  ifelse(Data$ES14 =="6", 2,
+  ifelse(Data$ES14 =="7", 1, 
+         'FAIL')))))))
+         
+Data$ES15 <- ifelse(Data$ES15=="1", 7,
+  ifelse(Data$ES15 =="2", 6,
+  ifelse(Data$ES15 =="3", 5,
+  ifelse(Data$ES15 =="4", 4,
+  ifelse(Data$ES15 =="5", 3,
+  ifelse(Data$ES15 =="6", 2,
+  ifelse(Data$ES15 =="7", 1, 
+         'FAIL')))))))
+
+Data$ES16 <- ifelse(Data$ES16=="1", 7,
+  ifelse(Data$ES16 =="2", 6,
+  ifelse(Data$ES16 =="3", 5,
+  ifelse(Data$ES16 =="4", 4,
+  ifelse(Data$ES16 =="5", 3,
+  ifelse(Data$ES16 =="6", 2,
+  ifelse(Data$ES16 =="7", 1, 
+         'FAIL')))))))
+
+Data$ES17 <- ifelse(Data$ES17=="1", 7,
+  ifelse(Data$ES17 =="2", 6,
+  ifelse(Data$ES17 =="3", 5,
+  ifelse(Data$ES17 =="4", 4,
+  ifelse(Data$ES17 =="5", 3,
+  ifelse(Data$ES17 =="6", 2,
+  ifelse(Data$ES17 =="7", 1, 
+         'FAIL')))))))
+
+## Convert to Numeric
+Data$ES1<-as.numeric(Data$ES1)
+Data$ES2<-as.numeric(Data$ES2)
+Data$ES3<-as.numeric(Data$ES3)
+Data$ES4<-as.numeric(Data$ES4)
+Data$ES5<-as.numeric(Data$ES5)
+Data$ES6<-as.numeric(Data$ES6)
+Data$ES7<-as.numeric(Data$ES7)
+Data$ES8<-as.numeric(Data$ES8)
+Data$ES9<-as.numeric(Data$ES9)
+Data$ES10<-as.numeric(Data$ES10)
+Data$ES11<-as.numeric(Data$ES11)
+Data$ES12<-as.numeric(Data$ES12)
+Data$ES13<-as.numeric(Data$ES13)
+Data$ES14<-as.numeric(Data$ES14)
+Data$ES15<-as.numeric(Data$ES15)
+Data$ES16<-as.numeric(Data$ES16)
+Data$ES17<-as.numeric(Data$ES17)
+Data$ES18<-as.numeric(Data$ES18)
+Data$ES19<-as.numeric(Data$ES19)
+Data$ES20<-as.numeric(Data$ES20)
+Data$ES21<-as.numeric(Data$ES21)
+
+## Find the average for each category:
+
+##ES1 to ES8: HI: 
+Data$HumanInterference <- ((Data$ES1 + Data$ES2 + Data$ES3 + Data$ES4 + Data$ES5 + Data$ES6 + Data$ES7 + Data$ES8)/8)
+
+##ES9 to ES13: ED: 
+Data$EquityDev <- ((Data$ES9 + Data$ES10 + Data$ES11 + Data$ES12 + Data$ES13)/5)
+
+##ES14 to ES17: HON: 
+Data$HumansOverNature <- ((Data$ES14 + Data$ES15 + Data$ES16 + Data$ES17)/4)
+
+##ES18 to ES21: NON:
+Data$Nonhumans <- ((Data$ES18 + Data$ES19 + Data$ES20 + Data$ES21)/4)
+
+## Find the average of all the statements:
+Data$AllViews <- ((Data$ES1 + Data$ES2 + Data$ES3 + Data$ES4 + Data$ES5 + Data$ES6 + Data$ES7 + Data$ES8 + Data$ES9 + Data$ES10 + Data$ES11 + Data$ES12 + Data$ES13 + Data$ES14 + Data$ES15 + Data$ES16 + Data$ES17 + Data$ES18 + Data$ES19 + Data$ES20 + Data$ES21)/21) 
+
+## Output the new data:
+write.csv(Data, file =paste("../Data/InitialProcessedData/", "IPD", data_date, ".csv", sep=''))
+```
+
+## Now go to the Secondary Data Processing RMD file.
+
+
+

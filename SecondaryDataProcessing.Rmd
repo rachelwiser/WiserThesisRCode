@@ -1,0 +1,71 @@
+---
+title: "InitialWTPAnalysis"
+author: "Rachel Wiser"
+output: html_document
+---
+
+```{r results='hide'}
+
+#Change data_date = to the date of data. This is the only place you need to change the code before running. 
+data_date = "April28"
+
+#Initial Survey Design using the R package. The Production, Organic, Carbon Offsettin, and Know Grower are bouquet attributes of interest based on previous literature. The labels inside the parantheses for each are the levels of those attributes. 
+install.packages("support.CEs")
+library(support.CEs)
+des1 <- rotation.design(attribute.names = list(
+  Production = c("Local", "Fairtrade", "FreshFair", "Standard"),
+  Organic = c("Yes", "No"), CarbonOffset = c("Yes", "No"), KnowGrower = c("Yes", "No"),
+  PricePercent = c("2.5","-2.5","5", "-5", "10", "0", "20", "30", "1", "2", "-1", "-2")),
+  nalternatives = 2, nblocks = 4, row.renames = FALSE,
+  randomize = TRUE, seed = 987)
+questionnaire(choice.experiment.design = des1)
+des1
+
+desmat1 <- make.design.matrix(choice.experiment.design = des1,optout = TRUE, categorical.attributes = c("Production", "Organic","CarbonOffset", "KnowGrower"), continuous.attributes = c("PricePercent"), unlabeled = TRUE)
+
+desmat1[1:5,]
+
+## Read in the data from the previous processing. The package will then make this into thirty-six observations for each respondent (one row for each bouquet alternative shown to a respondent). 
+
+Data <- read.csv(paste("../Data/InitialProcessedData/", "IPD", data_date, ".csv", sep=''))
+Data$BLOCK<-as.numeric(Data$BLOCK)
+
+AnalysisData <- make.dataset(respondent.dataset = Data, choice.indicators = c("Q1", "Q2", "Q3", "Q4", "Q5", "Q6", "Q7", "Q8", "Q9", "Q10", "Q11", "Q12"), design.matrix = desmat1)
+
+AnalysisData[1:5,]
+
+## As a quick look this quickly finds the MWTP for each attribute level. It does not take into account the strength of the data or other considerations:
+library(survival)
+
+clogout1 <- clogit(RES ~ ASC + Fairtrade + FreshFair + Standard + No + No.1 + No.2 + PricePercent + strata(STR), data = AnalysisData)
+```
+
+```{r}
+mwtp(output = clogout1, monetary.variables = c("PricePercent"), nonmonetary.variables = c("Fairtrade", "FreshFair", "Standard", "No", "No.1", "No.2"), seed = 987)
+```
+
+### There is an issue with this output. It is comparing the production to the Local designation and not the standard production method. It is also not giving an output that is easy to understand for the organic or other attributes. This is now corrected below:
+
+#### Its showing the MWTP relative to Local:
+##### Fairtrade/FreshFair/Standard =  Local + MWTP(Fairtrade/FreshFair/Standard)
+
+#### And the others are similar:
+##### Not Organic = Yes Organic + MWTP
+##### Not Carbon/Not Knowing grower = Yes + MWTP
+
+```{r}
+# Solved the issue of it being relative to local by doing ifelse to create a dummy column for local. It has to look at the dummy variables for the attribute levels and also whether it is a third alternative. The third alternative is the neither option, which should have a zero for everything.
+
+AnalysisData$Local <- ifelse(AnalysisData$Fairtrade == 0 & AnalysisData$FreshFair ==0 & AnalysisData$Standard == 0 & AnalysisData$ALT !=3, 1, 0)
+
+# Also converting the No, No.1, and No.2 to a 1,0 if it is (1), or isn't (0) organic, farmer, etc
+
+AnalysisData$Organic <- ifelse(AnalysisData$No == 0 & AnalysisData$ALT !=3, 1, 0)
+AnalysisData$Carbon <- ifelse(AnalysisData$No.1 == 0 & AnalysisData$ALT !=3, 1, 0)
+AnalysisData$Grower <- ifelse(AnalysisData$No.2 == 0 & AnalysisData$ALT !=3, 1, 0)
+
+# Now the results can be interpretted as the MWTP for Local, Fairtrade, Freshness Guaranteed Fairtrade, Organic, Carbon Offsetting, and Knowing the Grower. 
+write.csv(AnalysisData, paste("../Data/ReadyForAnalysis/AD", data_date, ".csv", sep=''), row.names=FALSE)
+```
+
+## Now go to the WTPCalculations RMD file.

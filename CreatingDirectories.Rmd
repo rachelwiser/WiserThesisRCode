@@ -1,0 +1,20 @@
+---
+title: "Setting Up Directories"
+author: "Rachel Wiser"
+output: html_document 
+---
+
+#### Create a working directory. These files will then be saved in that directory. The RMDFiles file should be saved in this working directory too.
+
+#### This should only be run once. Any subsequent analysis will use these already created files.
+
+##### The Qualtrics data you start with should be saved in the Data/QualtricsDownloads after these files are created.
+
+``` {r} 
+dir.create("../Outputs")
+dir.create("../Data")
+dir.create("../Data/QualtricsDownloads")
+dir.create("../Data/InitialProcessedData")
+dir.create("../Data/ReadyForAnalysis")
+
+```

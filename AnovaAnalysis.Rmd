@@ -1,0 +1,246 @@
+---
+title: "AnovaAnalysis"
+author: "Rachel Wiser"
+date: "April 7, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+
+data_date <- "April28"
+AnalysisData <- read.csv(paste("../Data/ReadyForAnalysis/AD", data_date, ".csv", sep=''))
+ViewsColumns <- c("AllViews", "HumanInterference", "EquityDev", "HumansOverNature", "Nonhumans")
+Views <- AnalysisData[ViewsColumns]
+
+# anova simple to complex models
+
+# anova with just the flower attributes
+Mod.BA <-lm(formula = RES ~ Local + Fairtrade + FreshFair + Organic + Grower + Carbon + PricePercent, data = AnalysisData)
+ 
+# Start with all the attributes
+anova( lm(formula = RES ~ Local + Fairtrade + FreshFair + Organic + Grower +Carbon + PricePercent + FlowerPercent + EducationRank + AgeRank + Female + IncomeRank + BudgetRank + YearsRank + HumanInterference + EquityDev + HumansOverNature + Nonhumans + AllViews, data = AnalysisData))
+ 
+# Step AIC
+stepAIC(lm(formula = RES ~ Local + Fairtrade + FreshFair + Organic + Grower + Carbon + PricePercent + FlowerPercent + EducationRank + AgeRank + Female + IncomeRank + BudgetRank + YearsRank + HumanInterference + EquityDev + HumansOverNature + Nonhumans + AllViews, data = AnalysisData), direction = "both")
+
+anova( lm(formula = RES ~ Local + Fairtrade + FreshFair + Organic + Grower + Carbon + PricePercent, data = AnalysisData))
+
+summary(lm(formula = RES ~ Local + Fairtrade + FreshFair + Organic + Grower + + Carbon + PricePercent, data = AnalysisData))
+
+#Drop flower percent
+anova( lm(formula = RES ~ Local + Fairtrade + FreshFair + Organic + Grower + + Carbon + PricePercent + EducationRank + AgeRank + Female + IncomeRank + BudgetRank + YearsRank + HumanInterference + EquityDev + HumansOverNature + Nonhumans + AllViews, data = AnalysisData))
+ 
+#Drop Education
+anova( lm(formula = RES ~ Local + Fairtrade + FreshFair + Organic + Grower + + Carbon + PricePercent + AgeRank + Female + IncomeRank + BudgetRank + YearsRank + HumanInterference + EquityDev + HumansOverNature + Nonhumans + AllViews, data = AnalysisData))
+ 
+#Remove years
+anova( lm(formula = RES ~ Local + Fairtrade + FreshFair + Organic + Grower + + Carbon + PricePercent + AgeRank + Female + IncomeRank + BudgetRank + HumanInterference + EquityDev + HumansOverNature + Nonhumans + AllViews, data = AnalysisData))
+
+# Remove Duties to Nonhumans
+anova( lm(formula = RES ~ Local + Fairtrade + FreshFair + Organic + Grower + + Carbon + PricePercent + AgeRank + Female + IncomeRank + BudgetRank + HumanInterference + EquityDev + HumansOverNature + AllViews, data = AnalysisData))
+
+# Remove All Views
+anova( lm(formula = RES ~ Local + Fairtrade + FreshFair + Organic + Grower + + Carbon + PricePercent + AgeRank + Female + IncomeRank + BudgetRank + HumanInterference + EquityDev + HumansOverNature, data = AnalysisData))
+
+
+# Remove Budget
+
+anova( lm(formula = RES ~ Local + Fairtrade + FreshFair + Organic + Grower + + Carbon + PricePercent + AgeRank + Female + IncomeRank + HumanInterference + EquityDev + HumansOverNature, data = AnalysisData))
+
+
+# Remove Female
+
+anova( lm(formula = RES ~ Local + Fairtrade + FreshFair + Organic + Grower + + Carbon + PricePercent + AgeRank + IncomeRank + HumanInterference + EquityDev + HumansOverNature, data = AnalysisData))
+
+
+# Remove Equity
+anova( lm(formula = RES ~ Local + Fairtrade + FreshFair + Organic + Grower + + Carbon + PricePercent + AgeRank + IncomeRank + HumanInterference + HumansOverNature, data = AnalysisData))
+
+
+# Remove Humans Over Nature
+anova( lm(formula = RES ~ Local + Fairtrade + FreshFair + Organic + Grower + + Carbon + PricePercent + AgeRank + IncomeRank + HumanInterference, data = AnalysisData))
+
+
+# Remove Age
+anova( lm(formula = RES ~ Local + Fairtrade + FreshFair + Organic + Grower + + Carbon + PricePercent  + IncomeRank + HumanInterference, data = AnalysisData))
+
+# Remove Human Interference
+anova( lm(formula = RES ~ Local + Fairtrade + FreshFair + Organic + Grower + + Carbon + PricePercent + IncomeRank, data = AnalysisData))
+
+# Remove Income
+anova( lm(formula = RES ~ Local + Fairtrade + FreshFair + Organic + Grower + + Carbon + PricePercent , data = AnalysisData))
+
+```
+
+
+```{r}
+# anova for selecting local option
+
+PlayData <- subset(AnalysisData, AnalysisData$Local==1)
+PlayData$SelectLocal <- (PlayData$Local)*(PlayData$RES)
+
+
+PlayModel <- lm(formula = SelectLocal ~ Organic + Grower + Carbon + PricePercent + FlowerPercent + EducationRank + AgeRank + Female + IncomeRank + BudgetRank + YearsRank + ES1+ ES2+ ES3+ ES4+ ES5+ ES6+ ES7+ ES8+ ES9+ ES10+ ES11+ ES12+ ES13+ ES14+ ES15+ ES16+ ES17+ ES18+ ES19+ ES20+ ES21, data = PlayData)
+
+PlayModel <- lm(formula = SelectLocal ~ Organic + Grower + Carbon + PricePercent + FlowerPercent + EducationRank + AgeRank + Female + IncomeRank + BudgetRank + YearsRank + HumanInterference + EquityDev + HumansOverNature + Nonhumans, data = PlayData)
+
+summary(PlayModel)
+
+library(MASS)
+Step <- stepAIC(PlayModel, direction = "both")
+
+anova(Step)
+summary(Step)
+
+
+```
+
+
+
+
+```{r}
+# anova for selecting Freshness Fairtrade option
+
+PlayData <- subset(AnalysisData, AnalysisData$FreshFair==1)
+PlayData$SelectFresh <- (PlayData$FreshFair)*(PlayData$RES)
+
+
+PlayModel <- lm(formula = SelectFresh ~ Organic + Grower + Carbon + PricePercent + FlowerPercent + EducationRank + AgeRank + Female + IncomeRank + BudgetRank + YearsRank + HumanInterference + EquityDev + HumansOverNature + Nonhumans, data = PlayData)
+
+
+summary(PlayModel)
+
+Step <- stepAIC(PlayModel, direction = "both")
+
+anova(Step)
+summary(Step)
+
+#Seems to just be organic, knowing the grower and price
+
+```
+
+
+```{r}
+# anova for selecting fair option
+PlayData <- subset(AnalysisData, AnalysisData$Fairtrade==1)
+PlayData$SelectFair <- (PlayData$Fairtrade)*(PlayData$RES)
+
+
+PlayModel <- lm(formula = SelectFair ~ Organic + Grower + Carbon + PricePercent + FlowerPercent + EducationRank + AgeRank + Female + IncomeRank + BudgetRank + YearsRank + HumanInterference + EquityDev + HumansOverNature + Nonhumans, data = PlayData)
+
+
+summary(PlayModel)
+
+Step <- stepAIC(PlayModel, direction = "both")
+
+anova(Step)
+summary(Step)
+## THIS ONE DIFFEERENT: Suddenly female, human interference, and equity dev also matter with grower and price
+
+```
+
+
+```{r}
+# anova for selecting organic option
+
+
+PlayData <- subset(AnalysisData, AnalysisData$Organic==1)
+PlayData$SelectOrganic <- (PlayData$Organic)*(PlayData$RES)
+
+
+PlayModel <- lm(formula = SelectOrganic ~ Local + FreshFair + Fairtrade + Grower + Carbon + PricePercent + FlowerPercent + EducationRank + AgeRank + Female + IncomeRank + BudgetRank + YearsRank + HumanInterference + EquityDev + HumansOverNature + Nonhumans, data = PlayData)
+
+
+summary(PlayModel)
+
+Step <- stepAIC(PlayModel, direction = "both")
+
+anova(Step)
+summary(Step)
+
+
+```
+
+
+```{r}
+# anova for selecting carbon option
+
+
+PlayData <- subset(AnalysisData, AnalysisData$Carbon==1)
+PlayData$SelectCarbon <- (PlayData$Carbon)*(PlayData$RES)
+
+
+PlayModel <- lm(formula = SelectCarbon ~ Local + FreshFair + Fairtrade + Organic + Grower + PricePercent + FlowerPercent + EducationRank + AgeRank + Female + IncomeRank + BudgetRank + YearsRank + HumanInterference + EquityDev + HumansOverNature + Nonhumans, data = PlayData)
+
+
+summary(PlayModel)
+
+Step <- stepAIC(PlayModel, direction = "both")
+
+anova(Step)
+summary(Step)
+
+
+```
+
+```{r}
+# anova for selecting grower option
+
+
+PlayData <- subset(AnalysisData, AnalysisData$Grower==1)
+PlayData$SelectGrower <- (PlayData$Grower)*(PlayData$RES)
+
+
+PlayModel <- lm(formula = SelectGrower ~ Local + FreshFair + Fairtrade + Organic + Carbon + PricePercent + FlowerPercent + EducationRank + AgeRank + Female + IncomeRank + BudgetRank + YearsRank + HumanInterference + EquityDev + HumansOverNature + Nonhumans, data = PlayData)
+
+
+summary(PlayModel)
+
+Step <- stepAIC(PlayModel, direction = "both")
+
+anova(Step)
+summary(Step)
+
+
+```
+
+
+```{r}
+# anova for selecting grower option
+
+PlayData <- subset(AnalysisData, AnalysisData$RES==TRUE)
+PlayData$PriceChosen <- (PlayData$PricePercent)*(PlayData$RES)
+
+
+PlayModel <- lm(formula = PriceChosen ~ Local + FreshFair + Fairtrade + Organic + Carbon + Grower + FlowerPercent + EducationRank + AgeRank + Female + IncomeRank + BudgetRank + YearsRank +  HumanInterference + EquityDev + HumansOverNature + Nonhumans, data = PlayData)
+
+
+summary(PlayModel)
+
+Step <- stepAIC(PlayModel, direction = "both")
+
+anova(Step)
+summary(Step)
+
+
+```
+
+
+
+```{r}
+# anova for selecting grower option
+
+PlayData <- AnalysisData
+
+
+PlayModel <- lm(formula = RES ~ Local + FreshFair + Fairtrade + Organic + Carbon + Grower + PricePercent + FlowerPercent + EducationRank + AgeRank + Female + IncomeRank + BudgetRank + YearsRank +  HumanInterference + EquityDev + HumansOverNature + Nonhumans, data = PlayData)
+
+
+summary(PlayModel)
+
+Step <- stepAIC(PlayModel, direction = "both")
+
+anova(Step)
+summary(Step)
+
+```

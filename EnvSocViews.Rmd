@@ -1,0 +1,114 @@
+---
+title: "EnvAndSocialVIews"
+author: "Rachel Wiser"
+date: "4/14/2018"
+output: html_document
+---
+
+``` {r}
+data_date = "April14"
+Data <- read.csv(paste("../Data/InitialProcessedData/", "IPD", data_date, ".csv", sep=''))
+NumberOfRespondents <-count(Data)
+library(dplyr)
+```
+
+```{r}
+
+HumIn <- c("ES1", "ES2", "ES3", "ES4", "ES5", "ES6", "ES7", "ES8")
+HumIn <- Data[HumIn]
+EqDev <- c("ES9", "ES10", "ES11", "ES12", "ES13")
+EqDev <- Data[EqDev]
+HON <- c("ES14", "ES15", "ES16", "ES17")
+HON <- Data[HON]
+NON <- c("ES18", "ES19", "ES20", "ES21")
+NON <- Data[NON]
+
+
+CorHumin<- cor(HumIn)
+CorPlotHumin <- corrplot(CorHumin, method="circle")
+
+CorEqDev <- cor(EqDev)
+CorPlotEqDev <- corrplot(CorEqDev, method="circle")
+
+CorHON <- cor(HON)
+CorPlotHON <- corrplot(CorHON, method="circle")
+
+CorNON <- cor(NON)
+CorPlotNON <- corrplot(NON)
+
+
+
+CatViews<- c("HumanInterference", "EquityDev","HumansOverNature", "Nonhumans")
+CatViews <- Data[CatViews]
+cor(CatViews)
+
+
+
+
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+## Views Boxplot:
+```{r}
+
+ViewsColumns <- c("AllViews", "HumanInterference", "EquityDev", "HumansOverNature", "Nonhumans")
+Views <- Data[ViewsColumns]
+
+pdf(file = paste("../Outputs/Outputs", data_date, "/ViewsBoxplot", data_date, ".pdf" , sep=''))
+boxplot(Views, 
+                col = "darkorange", 
+                ylab = "Strongly Disagree to Strongly Agree", 
+                xlab = "Statement Category", 
+                main = "Environmental and Social Statement", 
+                sub = paste("results as of ", data_date, " with ", NumberOfRespondents, " respondents", sep=''))
+
+dev.off()
+
+summary(Views)
+
+```
+
+
+```{r}
+AllStatements <- c("ES1", "ES2", "ES3", "ES4", "ES5", "ES6", "ES7", "ES8", "ES9", "ES10", "ES11", "ES12", "ES13", "ES14", "ES15", "ES16", "ES17", "ES18", "ES19", "ES20", "ES21")
+
+AllStatements <- subset(Data, select = AllStatements )
+pdf(file = paste("../Outputs/Outputs", data_date, "/AllViewsBoxplotx", data_date, ".pdf" , sep=''))
+boxplot(AllStatements, 
+                col = "darkorange", 
+                ylab = "Strongly Disagree to Strongly Agree", 
+                xlab = "Statement", 
+                main = "Environmental and Social Statement", 
+                sub = paste("results as of ", data_date, " with ", NumberOfRespondents, " respondents", sep=''))
+
+
+dev.off()
+
+
+
+```
+
+
+

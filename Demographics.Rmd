@@ -1,0 +1,166 @@
+---
+title: "Demographics"
+author: "Rachel Wiser"
+date: "4/13/2018"
+output: html_document
+---
+```{r}
+data_date = "April28"
+Data <- read.csv(paste("./Data/InitialProcessedData/", "IPD", data_date, ".csv", sep=''))
+library(dplyr)
+NumberOfRespondents <- count(Data)
+
+```
+
+### I was able to easily create a barplot of my demographics data based on the percent of respondents choosing each option (for example, which income level they suggested). However, the order it appeared on the barplot did not match the order it needed to appear. The way I was able to fix this is not the prettiest, but after trying a lot of different functions, packages, and googling, it's the only way I could get it to work.
+
+## Income Barplot:
+```{r}
+Income <- as.data.frame(table(Data$Income))
+# Set the below to the order that the Income levels should be in the table. Here the first row that the above code produced should be the fifth row, so it gets a 5. Continue for all.
+Income$Order <- c(5, 6, 7, 2, 3, 4, 1)
+Income <- arrange(Income, Income$Order)
+
+IncomePercent <- Income$Freq/sum(Income$Freq)*100
+Labels <- unique(Income$Var1)
+pdf(file = paste("../Outputs/Outputs", data_date, "/IncomeBarplot", data_date, ".pdf" , sep=''))
+barplot(IncomePercent, 
+                col = "Indian Red 3", 
+                names.arg = Income$Var1, 
+                ylab = "Percent of Respondents", 
+                xlab = "Income Range", 
+                main = "Income Ranges of Respondents", 
+                sub = paste("results as of ", data_date, " with ", NumberOfRespondents, " respondents", sep=''))
+
+dev.off()
+
+```
+
+## Budget Barplot:
+```{r}
+Budget <- as.data.frame(table(Data$Budget))
+# Set the below to the order that the levels should be in the table. 
+Budget$Order <- c(2, 4, 5, 6, 7, 8, 9, 10, 3, 11, 12, 1)
+Budget <- arrange(Budget, Budget$Order)
+
+BudgetPercent <- Budget$Freq/sum(Budget$Freq)*100
+Labels <- unique(Budget$Var1)
+pdf(file = paste("../Outputs/Outputs", data_date, "/BudgetBarplot", data_date, ".pdf" , sep=''))
+barplot(BudgetPercent, 
+                col = "Indian Red 3", 
+                names.arg = Budget$Var1, 
+                ylab = "Percent of Respondents", 
+                xlab = "Wedding Budget Ranges", 
+                main = " Wedding Budget Ranges of Respondents", 
+                sub = paste("results as of ", data_date, " with ", NumberOfRespondents, " respondents", sep=''))
+dev.off()
+
+```
+## Age Barplot:
+```{r}
+Age <- as.data.frame(table(Data$Age))
+
+AgePercent <- Age$Freq/sum(Age$Freq)*100
+Labels <- unique(Age$Var1)
+pdf(file = paste("../Outputs/Outputs", data_date, "/AgeBarplot", data_date, ".pdf" , sep=''))
+barplot(AgePercent, 
+                col = "Indian Red 3", 
+                names.arg = Age$Var1, 
+                ylab = "Percent of Respondents", 
+                xlab = "Age Range", 
+                main = "Age Ranges of Respondents", 
+                sub = paste("results as of ", data_date, " with ", NumberOfRespondents, " respondents", sep=''))
+
+dev.off()
+```
+
+## Education Barplot:
+```{r}
+Education <- as.data.frame(table(Data$Education))
+# Set the below to the order that the levels should be in the table. 
+Education$Order <- c(1, 3, 6, 4, 5, 2)
+Education <- arrange(Education, Education$Order)
+
+EducationPercent <- Education$Freq/sum(Education$Freq)*100
+Labels <- unique(Education$Var1)
+pdf(file = paste("../Outputs/Outputs", data_date, "/EducationBarplot", data_date, ".pdf" , sep=''))
+barplot(EducationPercent, 
+                col = "Indian Red 3", 
+                names.arg = Education$Var1, 
+                ylab = "Percent of Respondents", 
+                xlab = "Education Level", 
+                main = "Education Level of Respondents", 
+                sub = paste("results as of ", data_date, " with ", NumberOfRespondents, " respondents", sep=''))
+
+dev.off()
+
+```
+
+## Flower Percent Barplot:
+```{r}
+FlowerPercent <- as.data.frame(table(Data$FlowerPercent))
+# Set the below to the order that the levels should be in the table. 
+FlowerPercent$Order <- c(2, 3, 4,5,6,7,8,9,10, 1)
+FlowerPercent <- arrange(FlowerPercent, FlowerPercent$Order)
+
+
+FlowerPercentFreq <- FlowerPercent$Freq/sum(FlowerPercent$Freq)*100
+Labels <- unique(FlowerPercent$Var1)
+pdf(file = paste("../Outputs/Outputs", data_date, "/FlowerPercentBarplot", data_date, ".pdf" , sep=''))
+barplot(FlowerPercentFreq, 
+                col = "Indian Red 3", 
+                names.arg = FlowerPercent$Var1, 
+                ylab = "Percent of Respondents", 
+                xlab = "Percent Spent on Flowers", 
+                main = "Flower Percentage Spent of Respondents", 
+                sub = paste("results as of ", data_date, " with ", NumberOfRespondents, " respondents", sep=''))
+
+dev.off()
+
+```
+
+## Years Barplot:
+```{r}
+Years <- as.data.frame(table(Data$Years))
+# Set the below to the order that the levels should be in the table. 
+Years$Order <- c(5, 4, 3, 2, 1)
+Years <- arrange(Years, Years$Order)
+
+YearsPercent <- Years$Freq/sum(Years$Freq)*100
+Labels <- unique(Years$Var1)
+pdf(file = paste("../Outputs/Outputs", data_date, "/YearsBarplot", data_date, ".pdf" , sep=''))
+barplot(YearsPercent, 
+                col = "Indian Red 3", 
+                names.arg = Years$Var1, 
+                ylab = "Percent of Respondents", 
+                xlab = "Wedding Date", 
+                main = "How soon is the wedding", 
+                sub = paste("results as of ", data_date, " with ", NumberOfRespondents, " respondents", sep=''))
+
+dev.off()
+
+```
+
+
+## Season Barplot:
+```{r}
+Season <- as.data.frame(table(Data$Season))
+# Set the below to the order that the levels should be in the table. 
+Season$Order <- c(4, 2, 3, 1)
+Season <- arrange(Season, Season$Order)
+
+SeasonPercent <- Season$Freq/sum(Season$Freq)*100
+Labels <- unique(Season$Var1)
+pdf(file = paste("../Outputs/Outputs", data_date, "/SeasonBarplot", data_date, ".pdf" , sep=''))
+barplot(SeasonPercent, 
+                col = "Indian Red 3", 
+                names.arg = Season$Var1, 
+                ylab = "Percent of Respondents", 
+                xlab = "Wedding Season", 
+                main = "Season of Wedding", 
+                sub = paste("results as of ", data_date, " with ", NumberOfRespondents, " respondents", sep=''))
+
+dev.off()
+
+```
+
