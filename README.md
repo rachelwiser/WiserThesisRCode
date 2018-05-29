@@ -5,7 +5,7 @@
 
 #### To make the decisions that will be available to the respondent, run the Support.CEs package. I run it again in 3. Secondary Data Processing below again. 
 
-### For each R Markdown, there is an initial line data_date = "April14". Change this to the MonthDate. For example, April5. This should match the Qualtrics Data. The R markdowns are saved in the R markdown folder.
+### For each R Markdown, there is an initial line data_date = "April14". Change this to the MonthDate. For example, April5. This should match the Qualtrics Data. The R markdowns are saved in the R markdown folder. I saved my Qualtrics data as DataMonthDate (example: DataApril5).
 
 ## Order of R Markdowns
 ###     1. Creating Directories
